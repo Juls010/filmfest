@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+{% block title %}Estadísticas — FilmFest{% endblock %}
+
+{% block content %}
+<h1 class="fw-bold mb-4">Estadísticas</h1>
+
+{# Totales #}
+<div class="row g-3 mb-5">
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="display-4 fw-bold text-danger">{{ totales.peliculas }}</div>
+            <div class="text-muted">Películas</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="display-4 fw-bold text-danger">{{ totales.festivales }}</div>
+            <div class="text-muted">Festivales</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="display-4 fw-bold text-danger">{{ totales.proyecciones }}</div>
+            <div class="text-muted">Proyecciones</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="card text-center p-3">
+            <div class="display-4 fw-bold text-danger">{{ totales.puntuacion_media|floatformat:1|default:"—" }}</div>
+            <div class="text-muted">Puntuación media</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    {# Gráfico 1: Películas por género (donut) #}
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5 class="fw-bold mb-3">1. Películas por género</h5>
+            <canvas id="chartGenero" height="250"></canvas>
+        </div>
+    </div>
+
+    {# Gráfico 2: Puntuación media por género (barras) #}
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5 class="fw-bold mb-3">2. Puntuación media por género</h5>
+            <canvas id="chartPuntuacion" height="250"></canvas>
+        </div>
+    </div>
+
+    {# Gráfico 3: Proyecciones por festival (barras horizontales) #}
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5 class="fw-bold mb-3">3. Proyecciones por festival</h5>
+            <canvas id="chartFestival" height="250"></canvas>
+        </div>
+    </div>
+
+    {# Gráfico 4: Películas más proyectadas (barras) #}
+    <div class="col-md-6">
+        <div class="card p-3">
+            <h5 class="fw-bold mb-3">4. Películas más proyectadas</h5>
+            <canvas id="chartPeliculas" height="250"></canvas>
+        </div>
+    </div>
+
+    {# Gráfico 5: Directores con más películas (barras horizontales) #}
+    <div class="col-12">
+        <div class="card p-3">
+            <h5 class="fw-bold mb-3">5. Directores con más películas</h5>
+            <canvas id="chartDirectores" height="150"></canvas>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.color = '#aaa';
+Chart.defaults.borderColor = '#333';
+
+const colores = ['#e50914','#ff6b6b','#ffa500','#ffd700','#4caf50','#2196f3','#9c27b0','#00bcd4','#ff5722','#795548'];
+
+// 1. Películas por género
+new Chart(document.getElementById('chartGenero'), {
+    type: 'doughnut',
+    data: {
+        labels: [{% for g in peliculas_por_genero %}'{{ g.genero }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            data: [{% for g in peliculas_por_genero %}{{ g.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: colores,
+        }]
+    },
+    options: { plugins: { legend: { position: 'right' } } }
+});
+
+// 2. Puntuación media por género
+new Chart(document.getElementById('chartPuntuacion'), {
+    type: 'bar',
+    data: {
+        labels: [{% for g in puntuacion_por_genero %}'{{ g.genero }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Puntuación media',
+            data: [{% for g in puntuacion_por_genero %}{{ g.media|floatformat:2|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#e50914',
+        }]
+    },
+    options: { scales: { y: { min: 0, max: 10 } } }
+});
+
+// 3. Proyecciones por festival
+new Chart(document.getElementById('chartFestival'), {
+    type: 'bar',
+    data: {
+        labels: [{% for f in proyecciones_por_festival %}'{{ f.nombre|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Nº proyecciones',
+            data: [{% for f in proyecciones_por_festival %}{{ f.num_proyecciones }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#2196f3',
+        }]
+    },
+    options: { indexAxis: 'y' }
+});
+
+// 4. Películas más proyectadas
+new Chart(document.getElementById('chartPeliculas'), {
+    type: 'bar',
+    data: {
+        labels: [{% for p in peliculas_mas_proyectadas %}'{{ p.titulo|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Proyecciones',
+            data: [{% for p in peliculas_mas_proyectadas %}{{ p.num_proyecciones }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#ffa500',
+        }]
+    }
+});
+
+// 5. Directores
+new Chart(document.getElementById('chartDirectores'), {
+    type: 'bar',
+    data: {
+        labels: [{% for d in directores %}'{{ d.director|truncatechars:25 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+        datasets: [{
+            label: 'Películas',
+            data: [{% for d in directores %}{{ d.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#4caf50',
+        }]
+    },
+    options: { indexAxis: 'y' }
+});
+</script>
+{% endblock %}

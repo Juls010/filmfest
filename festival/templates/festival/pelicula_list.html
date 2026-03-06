@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% block title %}Películas — FilmFest{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">Películas</h1>
+    {% if user.is_authenticated %}
+    <a href="{% url 'crear_pelicula' %}" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Nueva película</a>
+    {% endif %}
+</div>
+
+{# Formulario de filtrado y ordenado #}
+<form method="get" class="row g-2 mb-4 p-3 rounded" style="background:#1c1c1c;">
+    <div class="col-md-4">
+        <input type="text" name="q" value="{{ q }}" class="form-control bg-dark text-light border-secondary" placeholder="Buscar por título o director...">
+    </div>
+    <div class="col-md-2">
+        <select name="genero" class="form-select bg-dark text-light border-secondary">
+            <option value="">Todos los géneros</option>
+            {% for val, label in generos %}
+            <option value="{{ val }}" {% if val == genero %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-2">
+        <input type="number" name="anio_desde" value="{{ request.GET.anio_desde }}" class="form-control bg-dark text-light border-secondary" placeholder="Año desde">
+    </div>
+    <div class="col-md-2">
+        <input type="number" name="anio_hasta" value="{{ request.GET.anio_hasta }}" class="form-control bg-dark text-light border-secondary" placeholder="Año hasta">
+    </div>
+    <div class="col-md-1">
+        <select name="orden" class="form-select bg-dark text-light border-secondary">
+            <option value="-anio" {% if orden == '-anio' %}selected{% endif %}>Más reciente</option>
+            <option value="anio" {% if orden == 'anio' %}selected{% endif %}>Más antiguo</option>
+            <option value="titulo" {% if orden == 'titulo' %}selected{% endif %}>A-Z</option>
+            <option value="-puntuacion" {% if orden == '-puntuacion' %}selected{% endif %}>Mejor puntuación</option>
+        </select>
+    </div>
+    <div class="col-md-1">
+        <button type="submit" class="btn btn-outline-danger w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for pelicula in page_obj %}
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ pelicula.titulo }}</h5>
+                <p class="text-muted small mb-1">{{ pelicula.director }} · {{ pelicula.anio }}</p>
+                <p class="small mb-2">
+                    <span class="badge bg-secondary">{{ pelicula.get_genero_display }}</span>
+                    <span class="text-muted">{{ pelicula.duracion_minutos }} min</span>
+                    {% if pelicula.puntuacion %}
+                    <span class="badge bg-warning text-dark">⭐ {{ pelicula.puntuacion }}</span>
+                    {% endif %}
+                </p>
+                <p class="card-text small">{{ pelicula.sinopsis|truncatewords:18 }}</p>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a href="{% url 'detalle_pelicula' pelicula.pk %}" class="btn btn-sm btn-outline-light">Detalles</a>
+                {% if user.is_authenticated %}
+                <a href="{% url 'editar_pelicula' pelicula.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-muted">No se han encontrado películas con esos criterios.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{# Paginación #}
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item"><a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&genero={{ genero }}&orden={{ orden }}">Anterior</a></li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link bg-dark border-secondary {% if num == page_obj.number %}text-white{% else %}text-light{% endif %}" href="?page={{ num }}&q={{ q }}&genero={{ genero }}&orden={{ orden }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item"><a class="page-link bg-dark text-light border-secondary" href="?page={{ page_obj.next_page_number }}&q={{ q }}&genero={{ genero }}&orden={{ orden }}">Siguiente</a></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

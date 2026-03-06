@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}{{ titulo }} — FilmFest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <h1 class="fw-bold mb-4">{{ titulo }}</h1>
+        <div class="card p-4">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
+                    <div>
+                        {% if field.field.widget.input_type == 'checkbox' %}
+                            <div class="form-check">
+                                {{ field }}
+                                <label class="form-check-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                            </div>
+                        {% else %}
+                            {% if field.errors %}
+                                <input type="{{ field.field.widget.input_type|default:'text' }}"
+                                       name="{{ field.html_name }}"
+                                       id="{{ field.id_for_label }}"
+                                       value="{{ field.value|default:'' }}"
+                                       class="form-control bg-dark text-light border-danger"
+                                       {% for attr, val in field.field.widget.attrs.items %}{{ attr }}="{{ val }}"{% endfor %}>
+                            {% else %}
+                                {{ field }}
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                    {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in field.errors %}
+                        <div><i class="bi bi-exclamation-circle"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if field.help_text %}
+                    <div class="form-text text-muted">{{ field.help_text }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <div class="d-flex gap-2 mt-4">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="bi bi-save"></i> Guardar
+                    </button>
+                    <a href="javascript:history.back()" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    input, select, textarea {
+        background-color: #1c1c1c !important;
+        color: #f0f0f0 !important;
+        border-color: #444 !important;
+    }
+    input:focus, select:focus, textarea:focus {
+        border-color: #e50914 !important;
+        box-shadow: 0 0 0 0.2rem rgba(229,9,20,.25) !important;
+    }
+</style>
+{% endblock %}

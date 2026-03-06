@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Festivales — FilmFest{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">Festivales</h1>
+    {% if user.is_staff %}
+    <a href="{% url 'crear_festival' %}" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Nuevo festival</a>
+    {% endif %}
+</div>
+
+<form method="get" class="row g-2 mb-4 p-3 rounded" style="background:#1c1c1c;">
+    <div class="col-md-6">
+        <input type="text" name="q" value="{{ q }}"
+               class="form-control border-secondary"
+               style="background:#fff; color:#222;"
+               placeholder="Buscar por nombre, ciudad o temática...">
+    </div>
+    <div class="col-md-2">
+        <select name="activo" class="form-select border-secondary" style="background:#fff; color:#222;">
+            <option value="">Todos</option>
+            <option value="1" {% if activo == '1' %}selected{% endif %}>Solo activos</option>
+            <option value="0" {% if activo == '0' %}selected{% endif %}>Solo inactivos</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <select name="orden" class="form-select border-secondary" style="background:#fff; color:#222;">
+            <option value="-fecha_inicio">Más reciente</option>
+            <option value="fecha_inicio">Más antiguo</option>
+            <option value="nombre">A-Z</option>
+            <option value="aforo_maximo">Aforo</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-danger w-100">Filtrar</button>
+    </div>
+</form>
+
+<div class="row row-cols-1 row-cols-md-2 g-4">
+    {% for festival in page_obj %}
+    <div class="col">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start">
+                    <h5 class="card-title mb-1">{{ festival.nombre }}</h5>
+                    {% if festival.activo %}
+                    <span class="badge bg-success">Activo</span>
+                    {% else %}
+                    <span class="badge bg-secondary">Inactivo</span>
+                    {% endif %}
+                </div>
+                <p class="text-muted small mb-2">
+                    <i class="bi bi-geo-alt"></i> {{ festival.ciudad }}, {{ festival.pais }}
+                </p>
+                <p class="small mb-1">
+                    <i class="bi bi-calendar3"></i>
+                    {{ festival.fecha_inicio }} — {{ festival.fecha_fin }}
+                    <span class="text-muted">({{ festival.duracion_dias }} días)</span>
+                </p>
+                <p class="small mb-1">
+                    <i class="bi bi-people"></i> Aforo: {{ festival.aforo_maximo }} personas
+                </p>
+                <p class="small text-muted">{{ festival.tematica }}</p>
+            </div>
+            <div class="card-footer d-flex gap-2">
+                <a href="{% url 'detalle_festival' festival.pk %}" class="btn btn-sm btn-outline-light">Ver detalles</a>
+                {% if user.is_staff %}
+                <a href="{% url 'editar_festival' festival.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                <a href="{% url 'eliminar_festival' festival.pk %}" class="btn btn-sm btn-outline-danger">Eliminar</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <p class="text-muted">No se han encontrado festivales con esos criterios.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&activo={{ activo }}">Anterior</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&q={{ q }}&activo={{ activo }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&q={{ q }}&activo={{ activo }}">Siguiente</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,35 @@
+# Entorno virtual
+.venv/
+env/
+venv/
+
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Migraciones (opcional, muchos proyectos sí las suben)
+# festival/migrations/
+
+# Variables de entorno y secretos
+.env
+*.env
+
+# Django
+*.log
+local_settings.py
+
+# Archivos estáticos generados
+staticfiles/
+static_root/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Sistema operativo
+.DS_Store        # macOS
+Thumbs.db        # Windows
+desktop.ini      # Windows

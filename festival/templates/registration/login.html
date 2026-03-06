@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar sesión — FilmFest{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <div class="card p-4">
+            <h2 class="fw-bold mb-4 text-center">Iniciar sesión</h2>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                        {% for error in field.errors %}<div>{{ error }}</div>{% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+                {% endif %}
+                <button type="submit" class="btn btn-danger w-100">Entrar</button>
+            </form>
+            <p class="text-center text-muted mt-3">¿No tienes cuenta? <a href="{% url 'registro' %}">Regístrate</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    input { background-color: #1c1c1c !important; color: #f0f0f0 !important; border-color: #444 !important; }
+    input:focus { border-color: #e50914 !important; box-shadow: 0 0 0 0.2rem rgba(229,9,20,.25) !important; }
+</style>
+{% endblock %}

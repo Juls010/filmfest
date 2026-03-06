@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+{% block title %}{{ festival.nombre }} — FilmFest{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-4">
+    <div>
+        <h1 class="fw-bold">{{ festival.nombre }}</h1>
+        <p class="text-muted">
+            <i class="bi bi-geo-alt"></i> {{ festival.ciudad }}, {{ festival.pais }} &nbsp;·&nbsp;
+            <i class="bi bi-calendar3"></i> {{ festival.fecha_inicio }} — {{ festival.fecha_fin }}
+            <span class="text-muted">({{ festival.duracion_dias }} días)</span>
+        </p>
+    </div>
+    {% if user.is_staff %}
+    <div class="d-flex gap-2">
+        <a href="{% url 'editar_festival' festival.pk %}" class="btn btn-outline-secondary">Editar</a>
+        <a href="{% url 'eliminar_festival' festival.pk %}" class="btn btn-outline-danger">Eliminar</a>
+    </div>
+    {% endif %}
+</div>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card p-3">
+            <h6 class="text-muted text-uppercase small mb-3">Información</h6>
+            <p class="mb-2"><strong>Temática:</strong> {{ festival.tematica }}</p>
+            <p class="mb-2"><strong>Aforo máximo:</strong> {{ festival.aforo_maximo }} personas</p>
+            <p class="mb-2">
+                <strong>Estado:</strong>
+                {% if festival.activo %}
+                <span class="badge bg-success">Activo</span>
+                {% else %}
+                <span class="badge bg-secondary">Inactivo</span>
+                {% endif %}
+            </p>
+            <p class="mb-0"><strong>Proyecciones:</strong> {{ proyecciones.count }}</p>
+        </div>
+    </div>
+    <div class="col-md-8">
+        {% if festival.descripcion %}
+        <div class="card p-3 h-100">
+            <h6 class="text-muted text-uppercase small mb-3">Descripción</h6>
+            <p class="mb-0">{{ festival.descripcion }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold mb-0">🎬 Proyecciones</h2>
+    {% if user.is_staff %}
+    <a href="{% url 'crear_proyeccion' %}" class="btn btn-danger btn-sm">
+        <i class="bi bi-plus-lg"></i> Añadir proyección
+    </a>
+    {% endif %}
+</div>
+
+<div class="table-responsive">
+    <table class="table table-dark table-hover">
+        <thead>
+            <tr>
+                <th>Película</th>
+                <th>Fecha y hora</th>
+                <th>Sala</th>
+                <th>Entradas</th>
+                <th>Precio</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proyeccion in proyecciones %}
+            <tr>
+                <td>
+                    <a href="{% url 'detalle_pelicula' proyeccion.pelicula.pk %}" class="text-light">
+                        {{ proyeccion.pelicula.titulo }}
+                    </a>
+                    {% if proyeccion.es_preestreno %}
+                    <span class="badge bg-warning text-dark ms-1">Preestreno</span>
+                    {% endif %}
+                </td>
+                <td>{{ proyeccion.fecha_hora|date:"d/m/Y H:i" }}</td>
+                <td>{{ proyeccion.get_sala_display }}</td>
+                <td>{{ proyeccion.entradas_disponibles }}</td>
+                <td>
+                    {% if proyeccion.precio_entrada == 0 %}
+                    <span class="text-success">Gratis</span>
+                    {% else %}{{ proyeccion.precio_entrada }}€
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <a href="{% url 'detalle_proyeccion' proyeccion.pk %}" class="btn btn-sm btn-outline-light">Ver</a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'editar_proyeccion' proyeccion.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="text-muted text-center py-3">No hay proyecciones registradas para este festival.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<a href="{% url 'lista_festivales' %}" class="btn btn-outline-secondary mt-3">
+    <i class="bi bi-arrow-left"></i> Volver a festivales
+</a>
+{% endblock %}

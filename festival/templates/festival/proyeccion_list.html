@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% block title %}Proyecciones — FilmFest{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">Proyecciones</h1>
+    {% if user.is_staff %}
+    <a href="{% url 'crear_proyeccion' %}" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Nueva proyección</a>
+    {% endif %}
+</div>
+
+<form method="get" class="row g-2 mb-4 p-3 rounded" style="background:#1c1c1c;">
+    <div class="col-md-5">
+        <select name="festival" class="form-select border-secondary" style="background:#fff; color:#222;">
+            <option value="">Todos los festivales</option>
+            {% for f in festivales %}
+            <option value="{{ f.pk }}" {% if festival_id == f.pk|stringformat:"s" %}selected{% endif %}>
+                {{ f.nombre }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+    <div class="col-md-3">
+        <select name="orden" class="form-select border-secondary" style="background:#fff; color:#222;">
+            <option value="fecha_hora">Fecha (asc)</option>
+            <option value="-fecha_hora">Fecha (desc)</option>
+            <option value="precio_entrada">Precio (asc)</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <button type="submit" class="btn btn-danger w-100">Filtrar</button>
+    </div>
+    {% if festival_id %}
+    <div class="col-md-2">
+        <a href="{% url 'lista_proyecciones' %}" class="btn btn-outline-secondary w-100">Limpiar</a>
+    </div>
+    {% endif %}
+</form>
+
+<div class="table-responsive">
+    <table class="table table-dark table-hover align-middle">
+        <thead>
+            <tr>
+                <th>Película</th>
+                <th>Festival</th>
+                <th>Fecha y hora</th>
+                <th>Sala</th>
+                <th>Entradas</th>
+                <th>Precio</th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for proyeccion in page_obj %}
+            <tr>
+                <td>
+                    <a href="{% url 'detalle_pelicula' proyeccion.pelicula.pk %}" class="text-light fw-semibold">
+                        {{ proyeccion.pelicula.titulo }}
+                    </a>
+                    <div class="text-muted small">{{ proyeccion.pelicula.director }}</div>
+                </td>
+                <td>
+                    <a href="{% url 'detalle_festival' proyeccion.festival.pk %}" class="text-light">
+                        {{ proyeccion.festival.nombre }}
+                    </a>
+                    <div class="text-muted small">{{ proyeccion.festival.ciudad }}</div>
+                </td>
+                <td>{{ proyeccion.fecha_hora|date:"d/m/Y H:i" }}</td>
+                <td>{{ proyeccion.get_sala_display }}</td>
+                <td>{{ proyeccion.entradas_disponibles }}</td>
+                <td>
+                    {% if proyeccion.precio_entrada == 0 %}
+                    <span class="text-success">Gratis</span>
+                    {% else %}
+                    {{ proyeccion.precio_entrada }}€
+                    {% endif %}
+                    {% if proyeccion.es_preestreno %}
+                    <span class="badge bg-warning text-dark d-block mt-1">Preestreno</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div class="d-flex gap-1">
+                        <a href="{% url 'detalle_proyeccion' proyeccion.pk %}" class="btn btn-sm btn-outline-light">Ver</a>
+                        {% if user.is_staff %}
+                        <a href="{% url 'editar_proyeccion' proyeccion.pk %}" class="btn btn-sm btn-outline-secondary">Editar</a>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-muted text-center py-4">No hay proyecciones registradas.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% if page_obj.has_other_pages %}
+<nav class="mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.previous_page_number }}&festival={{ festival_id }}">Anterior</a>
+        </li>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <li class="page-item {% if num == page_obj.number %}active{% endif %}">
+            <a class="page-link" href="?page={{ num }}&festival={{ festival_id }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ page_obj.next_page_number }}&festival={{ festival_id }}">Siguiente</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}
